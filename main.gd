@@ -3,6 +3,7 @@ extends Node
 const START_SCORE = 0
 
 @export var mob_scene: PackedScene
+@export var heart_scene: PackedScene
 
 var score
 
@@ -15,6 +16,7 @@ func _process(delta: float) -> void:
 func game_over() -> void:
 	$ScoreTimer.stop()
 	$MobTimer.stop()
+	$HeartTimer.stop()
 	$HUD.show_game_over()
 	
 func new_game():
@@ -22,12 +24,37 @@ func new_game():
 	
 	$Player.start($StartPosition.position)
 	$StartTimer.start()
+	
 	$HUD.update_score(score)
 	$HUD.update_health($Player.health)
 	$HUD.show_message("Get Ready")
+	
 	get_tree().call_group("mobs", "queue_free")
+	get_tree().call_group("hearts", "queue_free")
 
 func _on_mob_timer_timeout() -> void:
+	spawn_mob()
+	
+func _on_hearts_timer_timeout() -> void:
+	spawn_heart()
+	
+func _on_score_timer_timeout() -> void:
+	score += 1
+	$HUD.update_score(score)
+
+func _on_start_timer_timeout() -> void:
+	$MobTimer.start()
+	$HeartTimer.start()
+	$ScoreTimer.start()
+	
+func _on_health_changed() -> void:
+	$HUD.update_health($Player.health)
+
+func _on_heart_collected(heart: Area2D) -> void:
+	_on_health_changed()
+	heart.hide()
+	
+func spawn_mob() -> void:
 	var mob = mob_scene.instantiate()
 	
 	var mob_spawn_location = $MobPath/MobSpawnLocation
@@ -44,14 +71,13 @@ func _on_mob_timer_timeout() -> void:
 	mob.linear_velocity = velocity.rotated(direction)
 	
 	add_child(mob)
-
-func _on_score_timer_timeout() -> void:
-	score += 1
-	$HUD.update_score(score)
-
-func _on_start_timer_timeout() -> void:
-	$MobTimer.start()
-	$ScoreTimer.start()
-
-func _on_player_hit() -> void:
-	$HUD.update_health($Player.health)
+	
+func spawn_heart() -> void:
+	var screen_size = get_viewport().get_visible_rect().size
+	var pos = Vector2(
+		randf() * screen_size.x,
+		randf() * screen_size.y
+	)
+	var heart = heart_scene.instantiate()
+	heart.position = pos
+	add_child(heart)

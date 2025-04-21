@@ -1,8 +1,9 @@
-[gd_scene load_steps=6 format=3 uid="uid://brq12ein4trl7"]
+[gd_scene load_steps=7 format=3 uid="uid://brq12ein4trl7"]
 
 [ext_resource type="Script" uid="uid://bqcc12gjdppb1" path="res://main.gd" id="1_0xm2m"]
 [ext_resource type="PackedScene" uid="uid://s01ewxnn0xbp" path="res://mob.tscn" id="2_1bvp3"]
 [ext_resource type="PackedScene" uid="uid://deg3xs74bglxd" path="res://player.tscn" id="2_h2yge"]
+[ext_resource type="PackedScene" uid="uid://dg8medigk2gb8" path="res://heart.tscn" id="3_lquwl"]
 [ext_resource type="PackedScene" uid="uid://bqkmt7f70t3tn" path="res://hud.tscn" id="4_1bvp3"]
 
 [sub_resource type="Curve2D" id="Curve2D_1bvp3"]
@@ -14,6 +15,7 @@ point_count = 5
 [node name="Main" type="Node"]
 script = ExtResource("1_0xm2m")
 mob_scene = ExtResource("2_1bvp3")
+heart_scene = ExtResource("3_lquwl")
 
 [node name="ColorRect" type="ColorRect" parent="."]
 anchors_preset = 15
@@ -44,9 +46,14 @@ curve = SubResource("Curve2D_1bvp3")
 
 [node name="HUD" parent="." instance=ExtResource("4_1bvp3")]
 
+[node name="HeartTimer" type="Timer" parent="."]
+wait_time = 5.0
+
 [connection signal="dead" from="Player" to="." method="game_over"]
-[connection signal="hit" from="Player" to="." method="_on_player_hit"]
+[connection signal="healed" from="Player" to="." method="_on_heart_collected"]
+[connection signal="hit" from="Player" to="." method="_on_health_changed"]
 [connection signal="timeout" from="MobTimer" to="." method="_on_mob_timer_timeout"]
 [connection signal="timeout" from="ScoreTimer" to="." method="_on_score_timer_timeout"]
 [connection signal="timeout" from="StartTimer" to="." method="_on_start_timer_timeout"]
 [connection signal="start_game" from="HUD" to="." method="new_game"]
+[connection signal="timeout" from="HeartTimer" to="." method="_on_hearts_timer_timeout"]

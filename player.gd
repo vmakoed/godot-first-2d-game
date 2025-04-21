@@ -1,13 +1,15 @@
 extends Area2D
 
 signal hit
+signal healed
 signal dead
 
 @export var invincibility_timeout = 3
 @export var speed = 400
 @export var health_at_start = 3
+@export var minimum_health = 1
+@export var maximum_health = 3
 
-const MINIMUM_HEALTH = 1
 const DAMAGE = 1
 
 var screen_size
@@ -49,21 +51,32 @@ func _process(delta: float) -> void:
 		$AnimatedSprite2D.flip_v = velocity.y > 0
 
 func _on_body_entered(body: Node2D) -> void:
+	if body.is_in_group('mobs'): 
+		on_mob_entered()
+		
+func _on_area_entered(area: Area2D) -> void:
+	if area.is_in_group('hearts'): 
+		on_heart_entered(area)
+	
+func on_mob_entered() -> void:
 	if invincible: return
 	
-	if health > MINIMUM_HEALTH:
-		decrease_health()
-	else: 
-		die()
-
-func decrease_health() -> void:
 	health -= 1
 	hit.emit()
-	make_invincible()
+	
+	if health >= minimum_health:
+		make_invincible()
+	else: 
+		die()
+	
+func on_heart_entered(heart_node: Area2D) -> void:
+	if health == maximum_health:
+		return
+		
+	health += 1
+	healed.emit(heart_node)	
 	
 func die() -> void:
-	health = 0
-	hit.emit()
 	dead.emit()
 	hide()
 	$CollisionShape2D.set_deferred("disabled", true)
